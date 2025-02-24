@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ project_name }} - Confirm Your Account</title>
+    </head>
+    <body>
+        <p>Hello {{ user.first_name }},</p>
+        <p>Thank you for signing up for {{ project_name }}.</p>
+        <p>Please confirm your account by clicking the link below:</p>
+        <p><a href="{{ link }}">{{ link }}</a></p>
+        <p>This link is valid for {{ valid_hours }} hour(s).</p>
+        <p>If you did not sign up for {{ project_name }}, please ignore this email.</p>
+        <p>Best regards,<br>The {{ project_name }} Team</p>
+    </body>
+</html>
