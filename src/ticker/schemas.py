@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from typing import Tuple, Optional
 from enum import Enum
 
@@ -34,7 +34,7 @@ class TickerDetails(BaseModel):
 
 
 class UserDefinedTickerCreate(BaseModel):
-    ticker_code: str
+    ticker_code: constr(regex=r"^[G-Z]{3}[A-C]$")
     name: str
     description: Optional[str]
     sector: Optional[str]

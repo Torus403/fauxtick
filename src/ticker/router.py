@@ -15,9 +15,9 @@
 #
 #
 
-
+import re
 import uuid
-from typing import Any
+from typing import Any, List
 from src.dependencies import SessionDep, CurrentUser, get_current_active_superuser
 
 from fastapi import APIRouter, Depends, HTTPException, status, Path
@@ -64,6 +64,7 @@ def get_ticker_details(
 
 
 @router.post(
+    "/",
     status_code=status.HTTP_201_CREATED,
     response_model=TickerDetails,
 )
@@ -73,14 +74,45 @@ def create_user_defined_ticker(
     current_user: CurrentUser,
     body: UserDefinedTickerCreate,
 ) -> Any:
-    """Drives creation of user defined tickers."""
+    """Create a new user-defined ticker."""
+    if not re.match(r"^[G-Z]{3}[A-C]$", body.ticker_code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ticker code must match pattern '^[G-Z]{3}[A-C]$'."
+        )
 
-    # NOTE: ticker_code must obey regex="^[G-Z]{3}[A-C]$",
-    existing_user_defined_ticker = service.get_by_user(session=session, ticker_code=body.ticker_code, user_id=current_user.id)
-    if existing_user_defined_ticker:
+    existing_ticker = service.get_by_user(session=session, ticker_code=body.ticker_code, user_id=current_user.id)
+    if existing_ticker:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Existing ticker with the same code already exists."
         )
 
-    service.create()
+    new_ticker = service.create(
+        session=session,
+        user_id=current_user.id,
+        ticker_data=body,
+    )
+    return new_ticker
+
+
+@router.get(
+    "/",
+    response_model=List[TickerDetails],
+    status_code=status.HTTP_200_OK,
+)
+def get_user_defined_tickers(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> Any:
+    """
+    Retrieve all user-defined tickers for the authenticated user.
+    """
+    tickers = service.get_all_by_user(session=session, user_id=current_user.id)
+    if tickers is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No tickers found for the current user."
+        )
+    return tickers
